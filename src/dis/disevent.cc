@@ -170,8 +170,17 @@ double Meff2=Meff*Meff;
 //      Done by Jaroslaw Nowak
 //////////////////////////////////////////////
 
+
 //stabilne pi0
       pythia22->SetMDCY (pycomp_ (&pizero), 1, 0);
+
+	//C Thorpe: Stabalize hyperons
+      pythia22->SetMDCY ( pycomp_ (&DIS_PDG::Lambda) , 1, 0);
+      pythia22->SetMDCY ( pycomp_ (&DIS_PDG::Sigma) , 1, 0);
+      pythia22->SetMDCY ( pycomp_ (&DIS_PDG::SigmaP) , 1, 0);
+      pythia22->SetMDCY ( pycomp_ (&DIS_PDG::SigmaM) , 1, 0);
+
+
 
       pythia22->SetMSTU (20, 1);	//advirsory warning for unphysical flavour switch off
       pythia22->SetMSTU (23, 1);	//It sets counter of errors at 0

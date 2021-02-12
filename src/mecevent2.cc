@@ -35,6 +35,10 @@ mecevent2 (params & p, event & e, nucleus & t, bool cc, bool nowy)
 	double potwell = t.Ef();	//Fermi energy
 	double ebinding= t.Eb();	//Binding energy
 
+
+	
+
+
 	if(t.A()<4)
 	{
 		e.weight=0;

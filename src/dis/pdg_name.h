@@ -40,6 +40,11 @@ const int Delta_plus = 2214;
 const int Delta_plusplus = 2224;
 const int Delta_minus = 1114;
 
+const int Lambda = 3122;
+const int Sigma = 3212;
+const int SigmaP = 3222;
+const int SigmaM = 3212;
+
 const int e = 11;
 const int nu_e = 12;
 const int mu = 13;

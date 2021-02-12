@@ -226,6 +226,10 @@ void Interaction::total_cross_sections(particle &p1, nucleus &t, interaction_par
   NN_inel->set_input_point( X.Ekeff );
   double inel_ii = NN_inel->get_value( 1 );
   double inel_ij = NN_inel->get_value( 2 );
+
+
+  int ij=0;
+
   if( X.Ekeff <= 280. )                // inelastic threshold
   {inel_ii = 0.;inel_ij =0.;}
 
@@ -255,7 +259,7 @@ void Interaction::total_cross_sections(particle &p1, nucleus &t, interaction_par
     case pdg_SigmaM:
       // new method added below to house nucleon/hyperon scattering cross section
       // a new parameter was added to Interaction.h to store the pdg code of the hyperon
-      get_hyp_xsec(X.Ekeff,X.xsec_n,X.xsec_p,X.p2,p1,X.sigma,X.hyp_state);
+      get_hyp_xsec(X.xsec_n,X.xsec_p,X.p2,p1,X.sigma,X.hyp_state);
       break;
 
     default: // rest is pions!
@@ -324,7 +328,7 @@ bool Interaction::particle_scattering (particle & p1, nucleus &t, interaction_pa
     case pdg_SigmaM:
     case pdg_SigmaP:
       k1 = hyperon_;
-      return hyperon_scattering(X.hyp_state,p1,X.p2,X.n,X.p,X.sigma,X.xsec_p,X.xsec_n);
+      return hyperon_scattering(X.hyp_state,p1,X.p2,t,X.n,X.p,X.sigma,X.xsec_p,X.xsec_n);
 
     default:
       return 0;
@@ -387,8 +391,10 @@ void Interaction::get_NN_xsec( double Ek, double &resii, double &resij )
   {
     NN_xsec->set_input_point( Ek );
 
+
     resii = NN_xsec->get_value(1);
     resij = NN_xsec->get_value(2);
+
   }
 }
 
@@ -530,6 +536,8 @@ bool Interaction::nucleon_scattering ( particle& p1, particle& p2, int &n, parti
   double s1  = get_NN_xsec_ij( Ek1 );
   double s2  = get_NN_xsec_ij( Ek2 );
 
+  double Ek_used = -1;
+
   if( frandom()*(s1 + s2) < s2 )
   {
     p2.x *= -1;
@@ -537,12 +545,16 @@ bool Interaction::nucleon_scattering ( particle& p1, particle& p2, int &n, parti
     p2.z *= -1;
     NN_inel->set_input_point( Ek2 );
     NN_angle->set_input_point( Ek2 );
+    Ek_used = Ek2;
   }
   else
   {
     NN_inel->set_input_point( Ek1 );
     NN_angle->set_input_point( Ek1 );
+    Ek_used = Ek1;
   }
+
+
 
   if ( frandom() > NN_inel->get_value( 1+ij ) )  // 1 is ii, 2 is ij
       return nucleon_elastic(p1, p2, n, p);
@@ -633,10 +645,13 @@ const char* Interaction::nucleon_process_name()
 //// If no NN process with same charges exists scatter isotropically in CMS frame      
 //////////////////////////////////////                                                 
 
-bool Interaction::hyperon_scattering(int hyp_state, particle& p1, particle& p2, int &n,
+bool Interaction::hyperon_scattering(int hyp_state, particle& p1, particle& p2,nucleus t, int &n,
                                      particle p[], double sigma[], double sigma_p, double sigma_n)
 {
   int res;
+
+
+
 
   // set value of hyp state, now specific for protons and neutrons
   if(p2.pdg == PDG::pdg_neutron)
@@ -646,6 +661,9 @@ bool Interaction::hyperon_scattering(int hyp_state, particle& p1, particle& p2, 
 
   // selects the final state for the hyperons
   hyperon_state(hyp_state,sigma,ij,p);
+
+  particle p_x = p1;
+
 
   if(ij == 0 || ij == 1)
   {
@@ -668,9 +686,13 @@ bool Interaction::hyperon_scattering(int hyp_state, particle& p1, particle& p2, 
     res = scatter_n(n,p1,p2,p) || hyperon_error(p1,p2,p);
   }
 
-  / /set the binding energy of the hyperon
-  p[0].set_fermi(p1.his_fermi);
-
+/*
+  std::cout << "Hyperon rescatter" << std::endl;
+  std::cout << "Initial hyp: " << p1.pdg << "  " << p1.Ek() << std::endl;
+  std::cout << "Final hyp: " << p[0].pdg << "  " << p[0].Ek() << std::endl;
+*/
+ 
+ 
   return  res;
 
 }
@@ -684,7 +706,7 @@ bool Interaction::hyperon_scattering(int hyp_state, particle& p1, particle& p2, 
 
 bool Interaction::hyperon_error(particle p1, particle p2,particle p[])
 {
-  //  std::cout << "hyperon scatter error" << std::endl;
+//    std::cout << "hyperon scatter error" << std::endl;
 
   p[0] = p1;
   p[1] = p2;

@@ -27,8 +27,12 @@ dishadr (event & e, bool current, double hama, double entra)
 //      Done by Jaroslaw Nowak
 //////////////////////////////////////////////
 
+std::cout << "Setting RES PYTHIA parameters" << std::endl;
+
 //stabilne pi0
   pythia2->SetMDCY (pycomp_ (&pizero), 1, 0);
+//C Thorpe: Adding Hyperons as stable dis particles
+  pythia7->SetMDCY (pycomp_ (&Lambda), 1, 0);
 
   pythia2->SetMSTU (20, 1);	//advirsory warning for unphysical flavour switch off
   pythia2->SetMSTU (23, 1);	//It sets counter of errors at 0

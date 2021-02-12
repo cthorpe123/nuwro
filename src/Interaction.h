@@ -754,7 +754,7 @@ class Interaction
     //calculates nucleon/hyperon cross section
     void get_hyp_xsec(double &nY, double &pY, particle N, particle Y, double sigma[], int &hyp_state);
     //scatters hyperons, particles p1 and p2 into p[]
-    bool hyperon_scattering(int hyp_state, particle& p1, particle& p2, int &n, particle p[],
+    bool hyperon_scattering(int hyp_state, particle& p1, particle& p2,nucleus t, int &n, particle p[],
                            double sigma[], double sigma_p, double sigma_n);
     bool hyperon_error(particle p1, particle p2, particle p[]);
 };

@@ -272,10 +272,12 @@ double scatter2_with_BE(particle p1,particle p2, particle &p3, particle &p4, dou
 }
  while ((rr = sqrt(xx * xx + yy * yy + zz * zz)) > 1);
 
+rr=sqrt(xx*xx+yy*yy+zz*zz);
+
  vec dir(xx/rr,yy/rr,zz/rr);
 
  vect true_cms_dir(1,dir);
- 
+
  //boost this vector to the lab frame
  true_cms_dir.boost(vcms);
 
@@ -286,6 +288,7 @@ double scatter2_with_BE(particle p1,particle p2, particle &p3, particle &p4, dou
   //to boost to modified cms
   vec vcms_be = suma_be.v();
 
+
 //boost direction vector into modified cms
   true_cms_dir.boost(-vcms_be);
 
@@ -293,6 +296,7 @@ double scatter2_with_BE(particle p1,particle p2, particle &p3, particle &p4, dou
 
   double s = suma_be*suma_be; //squared cms energy
 double pp = cms_momentum2(s,p3.mass2(),p4.mass2());
+
 
 //forbidden by kinematics
  if(pp <= 0 ) return 0;
@@ -324,6 +328,7 @@ double pp = cms_momentum2(s,p3.mass2(),p4.mass2());
      p3 = lep;
      p4 = hyp;
 
+
   return q2;
 
 
@@ -334,9 +339,14 @@ double pp = cms_momentum2(s,p3.mass2(),p4.mass2());
 //into two particles p3 and p4.
 
 //cms_dir should be unit vector
-bool rescale_momenta(vect pcms, vec cms_dir, particle &p3, particle &p4,double Y_Eb){
+//bool rescale_momenta(vect pcms, vec cms_dir, particle &p3, particle &p4,double Y_Eb){
+bool rescale_momenta(vect pcms,vec cms_dir,particle &p3, particle &p4){
 
-  pcms.t += Y_Eb;
+	//make sure the length is set
+	if(cms_dir.length() > 1.0 + 1e-10 || cms_dir.length() < 1.0 - 1e-10 ){
+		std::cout << "cms_dir.length = " << cms_dir.length() << " , should be 1" << std::endl;
+		exit(0);
+	}
 
   vec vcms_be = pcms.v();
 
@@ -350,13 +360,18 @@ bool rescale_momenta(vect pcms, vec cms_dir, particle &p3, particle &p4,double Y
   p4.set_momentum( -cms_dir * sqrt(pp) );
 
   p3.t = sqrt(p3.mass()*p3.mass() + pp );
-
  p4.t = sqrt(p4.mass()*p4.mass() + pp );
 
  p3.boost(vcms_be);
  p4.boost(vcms_be);
 
- p4.t -= Y_Eb;
+ //check 4 momentum
+ /*
+    std::cout << std::endl;
+    std::cout << pcms << std::endl;
+    std::cout << vect(p3) << std::endl;
+    std::cout << vect(p4) << std::endl;
+    */
 
   return true;
 

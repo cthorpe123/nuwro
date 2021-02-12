@@ -52,6 +52,10 @@ double qel_sigma ( double Enu, ///< neutrino energy in the target frame
 		Fp=-Fp;
 	}
 
+
+
+	
+
 	double s=pow2(Enu+M)-pow2(Enu);
 	
     //double ABC1= qel_amp(Enu,q2,  m,M12,      F1,F2,Fp,Fa);
@@ -61,7 +65,8 @@ double qel_sigma ( double Enu, ///< neutrino energy in the target frame
     //double w1=(G*G*M*M/8/Pi/Enu/Enu)*ABC1 ;
     double w2=(G*G/M/M/32/8/Pi/Enu/Enu)*ABC2;
     //double w3=(G*G/M/M/32/8/Pi/Enu/Enu)*ABC3;
-    
+   
+ 
 	//cout<<w1<<endl;
 	//cout<<w2<<endl;
 	//cout<<w3<<endl;
@@ -233,5 +238,7 @@ double amp2(double s,double t,
 			 )
 	  )
 	)/MM;
+
+
    return AMP;
 }

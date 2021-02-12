@@ -21,6 +21,7 @@
 
 double hypevent(params&p, event &e, nucleus &t)
 {
+
   /*
    * 
    * This is the hyperon production code. Only for antineutrino scattering.
@@ -52,6 +53,7 @@ double hypevent(params&p, event &e, nucleus &t)
   // same coordinates for initial/final particles
   lepton.r=N0.r;
   hyperon.r=N0.r;
+
 
   // adjust the lepton flavour
   lepton.pdg=nu.pdg-(nu.pdg>0 ? 1 :-1);
@@ -101,6 +103,8 @@ double hypevent(params&p, event &e, nucleus &t)
   # 6 is deuterium with constant binding energy nucleus_E_b (for tests only!)
   */
 
+
+
   // if nucleus conains more than one nucleon, calculate binding energy
   if(t.p + t.n > 1)
   { 
@@ -109,7 +113,7 @@ double hypevent(params&p, event &e, nucleus &t)
       case 0: _E_bind = 0;        break;
       case 1: _E_bind = p.nucleus_E_b; break;
       case 2: _E_bind = t.Ef(N0) + p.kaskada_w;break; //temporary
-      case 3: _E_bind = bodek_binding_energy(N0, t.A()); break;
+      case 3: _E_bind = bodek_binding_energy(N0, t.p , t.n); break;
       case 4: _E_bind = binen (N0.p(), p.nucleus_p, p.nucleus_n); break;
       case 5: _E_bind = deuter_binen (N0.p());break; //deuterium 
       case 6: _E_bind = p.nucleus_E_b;      break; //deuterium like Fermi gas
@@ -117,18 +121,22 @@ double hypevent(params&p, event &e, nucleus &t)
     }
   }
 
+
+
+
   // to force zero binding energy
   // _E_bind=0; 
 
   particle N0_Eb = N0; // nucleon with 4 momentum adjusted for binding energy
   N0_Eb.t -= _E_bind;
 
+
   //generate hyperon binding energy as a function of 
   //local nuclear density
 
   double Y_Eb=0;
 
-  if(p.hyp_Eb && p.nucleus_target && t.p + t.n > 1) Y_Eb = t.hyp_BE(hyperon.r.length());
+  if(p.nucleus_target && t.p + t.n > 1) Y_Eb = t.hyp_BE(hyperon.r.length(),hyperon.pdg);	
 
   double xsec = 0;
   double jakobian=0;  // the value will be set by kinematics generator
@@ -141,17 +149,25 @@ double hypevent(params&p, event &e, nucleus &t)
   vec cms_dir; //scattering angle in bound CMS
 
   // double q2_BE = scatter2_with_BE_SC(nu,N0_Eb,lepton,hyperon_Eb,Y_Eb);
-  double q2 = scatter2_with_BE(nu,N0_Eb,lepton,hyperon,Y_Eb,cms_dir);
+ 
+  //double q2 = scatter2_with_BE(nu,N0_Eb,lepton,hyperon,Y_Eb,cms_dir);
+
+  //new method - assume hyperon is not bound here
+  //double q2 = scatter2_with_BE(nu,N0_Eb,lepton,hyperon,0,cms_dir);
+	
 
   // DEPRECATED
   // double q2 = qel_kinematics(_E_bind, nu, N0, lepton, hyperon, jakobian)
   // double q2 = czarek_kinematics2(_E_bind, nu, N0, lepton, hyperon, jakobian); // simplest choice for hiperon
-  // double q2 = scatter_2 (nu, N0_Eb, lepton, hyperon);
+   double q2 = scatter_2 (nu, N0_Eb, lepton, hyperon);
 
   if(q2==0) return 0; //indicates interaction is forbidden by kinematics
 
   vect nu4 = nu;
-  nu4.boost (-N0_Eb.v());  // go to target frame
+  
+  if(p.hyp_effmass) nu4.boost (-N0_Eb.v());  // go to target frame
+  else nu4.boost (-N0.v());  
+
   double Enu0=nu4.t;    // neutrino energy in target frame   
 
   // DEPRECATED
@@ -167,10 +183,15 @@ double hypevent(params&p, event &e, nucleus &t)
   //boost these to CMS for calculations
   vec vcms = (vect(nu) + vect(N0_Eb)).v ();
 
+
   v1.boost(-vcms);
   v2.boost(-vcms);
   v3.boost(-vcms);
   v4.boost(-vcms);
+
+  //direction of lepton in rest frame nu+N0_Eb
+  cms_dir = vec(v3)/vec(v3).length();
+//  std::cout << cms_dir << std::endl;
 
   /////////////////////////////////////////////////////////
   // Generate Cross Sections
@@ -178,17 +199,33 @@ double hypevent(params&p, event &e, nucleus &t)
 
   double kin = v1.length(); //incoming neutrino momentum
   double kout = v3.length(); //outgoing lepton momentum  
-  double rs = sqrt((v1+v2)*(v1+v2));
 
-  //old version
+
+double Nuc_mass;
+double Hyp_mass;
+
+if(p.hyp_effmass){
+Nuc_mass = sqrt(N0_Eb*N0_Eb);
+Hyp_mass = sqrt(hyperon*hyperon);
+}
+
+else {
+Nuc_mass = N0.mass();
+Hyp_mass = hyperon.mass();
+}
+
+
+  //DEPRECATED
   //double dif = Hyperon_Interaction(-q2,Enu0,h,v1,v2,v3,v4,true);
-  
-  double dif = Singh_Model(-q2,Enu0,h,v1,v2,v3,v4,true);
+  //double dif = Singh_Model(-q2,Enu0,h,v1,v2,v3,v4,true);
 
-  double M2 = v2*v2;
+  double dif = Singh_Model2(-q2,Enu0,h,Nuc_mass,Hyp_mass,lepton.mass(),true);
+  double M2 = Nuc_mass*Nuc_mass;
 
   double pf = G*G*(1-cos2thetac)/(8*Pi*Enu0*Enu0*M2);
   jakobian = 4*kin*kout; 
+
+
 
   xsec = dif*pf*jakobian;
     
@@ -213,14 +250,18 @@ double hypevent(params&p, event &e, nucleus &t)
 
     //generate cms blob
     vect cms_Eb = vect(N0_Eb) + vect(nu);
+ 
+    //recalculate BE 
+    if(p.nucleus_target && t.p + t.n > 1) Y_Eb = t.hyp_BE(hyperon2.r.length(),hyperon2.pdg);
 
-    // bool rescale = rescale_momenta(cms_Eb,cms_dir,lepton2,hyperon2,Y_Eb);
+//     bool rescale = rescale_momenta(cms_Eb,cms_dir,lepton2,hyperon2,Y_Eb);
 
     //reuturns false if sigma0 prod forbidden by kinematics
 
     //try to solve kinematics for new hyperon, returns false if forbidden
-    if( rescale_momenta(cms_Eb,cms_dir,lepton2,hyperon2,Y_Eb) )
+    if( rescale_momenta(cms_Eb,cms_dir,lepton2,hyperon2) )
     {
+
       v3 = vect(lepton2);
       v4 = vect(hyperon2);
 
@@ -233,9 +274,25 @@ double hypevent(params&p, event &e, nucleus &t)
       vect p13 = nu - lepton2;
       double q22 = p13 * p13;
 
+
+if(p.hyp_effmass){
+Hyp_mass = sqrt(hyperon2*hyperon2);
+}
+
+else {
+Hyp_mass = hyperon2.mass();
+}
+	
+
+
       // calculate the cross section
-      dif = Singh_Model(-q22,Enu0,2,v1,v2,v3,v4,true);
+  
+  //DEPRECATED
+  //    dif = Singh_Model(-q22,Enu0,2,v1,v2,v3,v4,true);
+
+	dif = Singh_Model2(-q22,Enu0,2,Nuc_mass,Hyp_mass,lepton.mass(),true);
  
+
       jakobian = 4*kin*kout; 
       //prefactor pf is the same
       xsec2 = dif*pf*jakobian;
@@ -263,14 +320,29 @@ double hypevent(params&p, event &e, nucleus &t)
     xsec *= sqrt ( (1 - vz) * (1 - vz) );
   }
 
-  //return final particles to their mass shells
-  hyperon.set_mass(PDG::mass(hyperon.pdg));
+
+
+
+  if(p.nucleus_target && t.p + t.n > 1) hyperon.set_fermi(t.hyp_BE(hyperon.r.length(),hyperon.pdg));
+  else hyperon.set_fermi(0);
+
+/*
+  //check if hyperon can be generated in potential (performed at start of cascade)
+  if( hyperon.Ek() + hyperon.his_fermi < 0 ){
+ return 0;
+}
+*/
 
   e.temp.push_back(lepton);
   e.temp.push_back(hyperon);
   e.out.push_back(lepton);
   e.out.push_back(hyperon);
+ 
   e.weight=xsec/cm2;
+
+
+
+if( hyperon.Ek() < 0 ) std::cout << "Negative KE: " << hyperon.Ek() << "  pdg: " << hyperon.pdg << std::endl;
 
   return e.weight*cm2;
 }

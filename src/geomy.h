@@ -214,6 +214,8 @@ public:
 		double x,dx,y,dy,z,dz;
 	    x=y=z=0;
 	    dx=dy=dz=1e40;
+		
+
 		if(dir.x!=0)
 		{  x=(orig.x-start.x)/dir.x;
 		   dx=abs(dxyz.x/dir.x);

@@ -223,7 +223,8 @@ E = cms_energy(Plab*GeV,PDG::mass_proton,PDG::mass_Sigma);
 	R = phase_space(E,M_L,M_N2,M_S,M_N1);
 
     sigma[1] = sigma_2*R;
-  
+ 
+ 
     //////////////////////////////////
     // SIGMA0 P -> SIGMA+ N 
     /////////////////////////////////

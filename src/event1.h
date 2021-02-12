@@ -68,7 +68,7 @@ class event:public TObject
 		                        ///< 11 - pion tpp
 		                        ///< 12 - pion no interaction
 		                        ///< 13 - nucleon no interaction
-														///< 14 - any hyperon
+					///< 14 - any hyperon
 		int pr;     ///< number of protons  in the residual nucleus
 		int nr;     ///< number of neutrons in the residual nucleus
 		double r_distance; //< distance from nucleus center of absorption point (if happened)

@@ -113,6 +113,7 @@ class BeamRF : public beam
   double minx,miny,maxx,maxy;
   double POT=0;
   int nnu=0; //total num of events  
+  double sum_weights=0; //sum of norms used
   double POT_per_file=0;
 
 public:
@@ -146,6 +147,7 @@ public:
     double prev=0;
     for(int i=0;i<N;i++)
       acum[i]=prev+=events[i/100000][i%100000].norm;
+
 
       prev=0;
     for(int i=0;i<N;i++)
@@ -186,6 +188,7 @@ public:
         int unsaved=0;
         double normsall=0;
         double normsbad=0;
+
     vector<string> names=root_files(folder);
     int n=names.size();
     if(first>n)
@@ -203,8 +206,11 @@ public:
                 if(detector)
                 {
                    particle nu=nu_from_event(*e);
-                   if(detector->is_hit_by(nu.p(),nu.r))
+                   if(detector->is_hit_by(nu.p(),nu.r)){
                         store(*e);
+			//adding weight calc
+			sum_weights += e->norm;
+			}
                    else
                    {
                         unsaved++;
@@ -264,10 +270,11 @@ public:
 std::cout << "POT : " << POT << std::endl;
   std::cout << std::endl;
 */
-
+   
   //if POT per file has been specified
-  if(POT_per_file != -1) return nnu/POT;    
-  
+//  if(POT_per_file != -1) return nnu/POT;    
+    if(POT_per_file != -1) return sum_weights/POT;  
+
   //otherwise assume ND280 setup
   else return (acum[N-1]/limit)/1e21;//*P_region;
   }
