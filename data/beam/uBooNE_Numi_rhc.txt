@@ -8,4 +8,4 @@ beam_length_units=cm
 
 
 #set to -1 to use default ND280 setting
-beam_pot_per_file = 9e8
+beam_pot_per_file = 4e9
